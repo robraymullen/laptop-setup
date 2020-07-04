@@ -1,0 +1,141 @@
+---
+- hosts: all
+  gather_facts: yes
+  become: yes
+  vars:
+    ansible_distribution_release: "xenial" #trusty
+  tasks:
+   #Install python3 first before everything else
+  - name: Install python3
+    apt: name=python3.8 state=latest
+
+  - name: Install git
+    apt: name=git state=latest update_cache=yes
+
+    #docker setup
+  - name: install aptitude
+    apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+  - name: install required packages
+    apt: name={{ item }} state=latest update_cache=yes
+    loop: ['apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools', 'gnupg-agent']
+
+  - name: Add docker GPG apt key
+    apt_key: 
+     url: https://download.docker.com/linux/ubuntu bionic stable
+     state: present
+
+  - name: Update apt and install docker-ce
+    apt: update_cache=yes name=docker-ce state=latest
+
+  - name: Install docker module for python
+    pip:
+      name: docker
+  
+    # install dev IDEs and dependencies
+  - name: Install visual studio code
+    apt: 
+        deb: https://go.microsoft.com/fwlink/?LinkID=760868
+
+  - name: Install Java JRE 13
+    apt: update_cache=yes name=openjdk-13-jre state=latest
+
+  - name: Install Java JDK 13
+    apt: update_cache=yes name=openjdk-13-jdk state=latest
+
+  - name: Set JAVA_HOME
+    command: export JAVA_HOME=/usr/lib/jvm/openjdk-13-jdk
+  
+  - name: Add JAVA bin to PATH
+    command: export PATH=$PATH:$JAVA_HOME/bin
+
+  - name: Install Eclipse
+    snap: 
+      name: eclipse
+      classic: yes
+
+  #Install programming languages
+  - name: "Rust | Install"
+    shell: "curl https://sh.rustup.rs -sSf | sh -s -- -y"
+    changed_when: false
+
+  - name: "Rust | Install toolchain"
+    shell: "~/.cargo/bin/rustup toolchain install {{ rust_version }}"
+    register: rustup_toolchain
+    changed_when: '"installed" in rustup_toolchain.stdout'
+    when: rust_version is defined
+
+  - name: Install perl
+    apt: update_cache=yes name=perl state=latest
+
+  - name: Install haskell
+    apt: update_cache=yes name=haskell-platform state=latest
+
+  #Install virtualbox
+  - name: Install virtualbox
+    apt: update_cache=yes name=virtualbox state=latest
+
+  #devops  tools
+  - name: ensure the jenkins apt repository key is installed
+    apt_key: url=https://pkg.jenkins.io/debian-stable/jenkins.io.key state=present
+    become: yes
+
+  - name: ensure the repository is configured
+    apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
+    become: yes
+
+  - name: ensure jenkins is installed
+    apt: name=jenkins update_cache=yes
+    become: yes
+
+  - name: Add ansible repo
+    apt_repository:
+      repo: ppa:ansible/ansible
+
+  - name: Install ansible
+    apt: name=ansible update_cache=yes state=latest
+
+  # NodeJS and various packages
+  - name: Install the gpg key for nodejs LTS
+    apt_key:
+      url: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+      state: present
+
+  - name: Install the nodejs LTS repos
+    apt_repository:
+      repo: "deb https://deb.nodesource.com/node_12.x {{ ansible_distribution_release }} main"
+      state: present
+      update_cache: yes
+
+  - name: Install nodejs
+    apt:
+      name: nodejs
+      state: present
+
+  - name: Install typescript with npm
+    npm:
+      name: typescript
+      global: yes
+
+  # Install Deno
+  - name: Install deno
+    shell: curl -fsSL https://deno.land/x/install/install.sh | sh
+    args: 
+        warn: no
+
+  # Install pip python packages
+  - name: Install numpy
+    pip: 
+      name: numpy
+
+  - name: Install pandas
+    pip: 
+      name: pandas
+
+  # force use of python3 here
+  - name: Install git-pull-request
+    shell: python3 -m pip install git-pull-request
+    args: warn=no
+
+
+ 
