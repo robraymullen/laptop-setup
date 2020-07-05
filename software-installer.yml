@@ -12,6 +12,22 @@
   - name: Install git
     apt: name=git state=latest update_cache=yes
 
+  - name: Install github desktop
+    apt: 
+      deb: https://github.com/shiftkey/desktop/releases/download/release-2.5.3-linux1/GitHubDesktop-linux-2.5.3-linux1.deb
+
+  - name: Configure git email
+    git_config: 
+      name: user.email
+      scope: global
+      value: robraymullen@gmail.com
+
+  - name: Configure git username
+    git_config:
+      name: user.name
+      scope: global
+      value: robraymullen
+
     #docker setup
   - name: install aptitude
     apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
@@ -70,6 +86,19 @@
 
   - name: Install haskell
     apt: update_cache=yes name=haskell-platform state=latest
+
+  - name: install g++ compiler for c++ with build-essential
+    apt: update_cache=yes name=build-essential state=latest
+
+  - name: Install ruby
+    apt: update_cache=yes name=ruby-full state=latest
+
+  - name: Install r lang
+    apt: update_cache=yes name=r-base state=latest
+
+  - name: Install rstudio
+    apt: 
+     deb: https://download1.rstudio.org/desktop/bionic/amd64/rstudio-1.3.959-amd64.deb
 
   #Install virtualbox
   - name: Install virtualbox
@@ -132,10 +161,14 @@
     pip: 
       name: pandas
 
-  # force use of python3 here
-  - name: Install git-pull-request
-    shell: python3 -m pip install git-pull-request
-    args: warn=no
+  # General text editing tools
+  - name: Tex live for latex
+    apt: update_cache=yes name=texlive-full state=latest
 
+  - name: text editor for latex
+    apt: update_cache=yes name=texmaker state=latest
 
- 
+  # General useful tools
+  - name: Install Nordpass password manager
+    snap:
+     name: nordpass
