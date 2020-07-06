@@ -1,7 +1,9 @@
 ---
-- hosts: all
+- hosts: fileserver
   gather_facts: yes
   become: yes
+  become_method: sudo   
+  become_user: root
   vars:
     ansible_distribution_release: "xenial" #trusty
   tasks:
@@ -38,8 +40,12 @@
 
   - name: Add docker GPG apt key
     apt_key: 
-     url: https://download.docker.com/linux/ubuntu bionic stable
+     url: https://download.docker.com/linux/ubuntu/gpg
      state: present
+
+  - name: Add Docker APT repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
 
   - name: Update apt and install docker-ce
     apt: update_cache=yes name=docker-ce state=latest
@@ -47,17 +53,43 @@
   - name: Install docker module for python
     pip:
       name: docker
-  
+    
+  - name: Pull jenkins docker container from hub image
+    docker_image:
+      name: jenkins/jenkins
+      source: pull
+    when: not ansible_check_mode
+
+  - name: Create Jenkins docker container
+    docker_container:
+      name: jenkins
+      image: jenkins/jenkins
+      state: present
+    when: not ansible_check_mode
+
+  - name: Pull postgres db docker container
+    docker_image:
+      name: postgres
+      source: pull
+    when: not ansible_check_mode
+
+  - name: Create postgres docker container
+    docker_container:
+      name: postgres
+      image: postgres
+      state: present
+    when: not ansible_check_mode
+
     # install dev IDEs and dependencies
   - name: Install visual studio code
     apt: 
         deb: https://go.microsoft.com/fwlink/?LinkID=760868
-
+ #changing to JDK11 for testing
   - name: Install Java JRE 13
-    apt: update_cache=yes name=openjdk-13-jre state=latest
+    apt: update_cache=yes name=openjdk-11-jre state=latest
 
   - name: Install Java JDK 13
-    apt: update_cache=yes name=openjdk-13-jdk state=latest
+    apt: update_cache=yes name=openjdk-11-jdk state=latest
 
   - name: Set JAVA_HOME
     command: export JAVA_HOME=/usr/lib/jvm/openjdk-13-jdk
@@ -105,18 +137,6 @@
     apt: update_cache=yes name=virtualbox state=latest
 
   #devops  tools
-  - name: ensure the jenkins apt repository key is installed
-    apt_key: url=https://pkg.jenkins.io/debian-stable/jenkins.io.key state=present
-    become: yes
-
-  - name: ensure the repository is configured
-    apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
-    become: yes
-
-  - name: ensure jenkins is installed
-    apt: name=jenkins update_cache=yes
-    become: yes
-
   - name: Add ansible repo
     apt_repository:
       repo: ppa:ansible/ansible
@@ -141,10 +161,16 @@
       name: nodejs
       state: present
 
+  - name: Install npm
+    apt: 
+     name: npm
+     state: latest
+
   - name: Install typescript with npm
     npm:
       name: typescript
       global: yes
+    when: not ansible_check_mode
 
   # Install Deno
   - name: Install deno
@@ -168,7 +194,16 @@
   - name: text editor for latex
     apt: update_cache=yes name=texmaker state=latest
 
+  - name: Install Notepad++
+    apt: 
+     name: notepad-plus-plus
+     force_apt_get: yes
+     state: latest
+    when: not ansible_check_mode
+
   # General useful tools
   - name: Install Nordpass password manager
     snap:
      name: nordpass
+     force_apt_get: yes
+    when: not ansible_check_mode
