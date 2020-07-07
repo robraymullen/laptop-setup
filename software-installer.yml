@@ -86,13 +86,13 @@
         deb: https://go.microsoft.com/fwlink/?LinkID=760868
  #changing to JDK11 for testing
   - name: Install Java JRE 13
-    apt: update_cache=yes name=openjdk-11-jre state=latest
+    apt: update_cache=yes name=openjdk-11-jre state=latest force_apt_get=yes
 
   - name: Install Java JDK 13
-    apt: update_cache=yes name=openjdk-11-jdk state=latest
+    apt: update_cache=yes name=openjdk-11-jdk state=latest force_apt_get=yes
 
   - name: Set JAVA_HOME
-    command: export JAVA_HOME=/usr/lib/jvm/openjdk-13-jdk
+    command: export JAVA_HOME=/usr/lib/jvm/openjdk-11-jdk
   
   - name: Add JAVA bin to PATH
     command: export PATH=$PATH:$JAVA_HOME/bin
@@ -114,19 +114,19 @@
     when: rust_version is defined
 
   - name: Install perl
-    apt: update_cache=yes name=perl state=latest
+    apt: update_cache=yes name=perl state=latest force_apt_get=yes
 
   - name: Install haskell
-    apt: update_cache=yes name=haskell-platform state=latest
+    apt: update_cache=yes name=haskell-platform state=latest force_apt_get=yes
 
   - name: install g++ compiler for c++ with build-essential
-    apt: update_cache=yes name=build-essential state=latest
+    apt: update_cache=yes name=build-essential state=latest force_apt_get=yes
 
   - name: Install ruby
-    apt: update_cache=yes name=ruby-full state=latest
+    apt: update_cache=yes name=ruby-full state=latest force_apt_get=yes
 
   - name: Install r lang
-    apt: update_cache=yes name=r-base state=latest
+    apt: update_cache=yes name=r-base state=latest force_apt_get=yes
 
   - name: Install rstudio
     apt: 
@@ -134,7 +134,7 @@
 
   #Install virtualbox
   - name: Install virtualbox
-    apt: update_cache=yes name=virtualbox state=latest
+    apt: update_cache=yes name=virtualbox state=latest force_apt_get=yes
 
   #devops  tools
   - name: Add ansible repo
@@ -142,7 +142,7 @@
       repo: ppa:ansible/ansible
 
   - name: Install ansible
-    apt: name=ansible update_cache=yes state=latest
+    apt: name=ansible update_cache=yes state=latest force_apt_get=yes
 
   # NodeJS and various packages
   - name: Install the gpg key for nodejs LTS
@@ -160,11 +160,13 @@
     apt:
       name: nodejs
       state: present
+      force_apt_get: yes
 
   - name: Install npm
     apt: 
      name: npm
      state: latest
+     force_apt_get: yes
 
   - name: Install typescript with npm
     npm:
@@ -189,10 +191,10 @@
 
   # General text editing tools
   - name: Tex live for latex
-    apt: update_cache=yes name=texlive-full state=latest
+    apt: update_cache=yes name=texlive-full state=latest force_apt_get=yes
 
   - name: text editor for latex
-    apt: update_cache=yes name=texmaker state=latest
+    apt: update_cache=yes name=texmaker state=latest force_apt_get=yes
 
   - name: Install Notepad++
     apt: 
